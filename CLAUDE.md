@@ -176,6 +176,22 @@ package io.github.kotlinmania.logos.<module>
 
 ### Do not delegate `.kt` edits to subagents
 
+## Trait default methods with `where` clauses
+
+Rust trait default methods gated by `where T: SomeBound` translate to
+Kotlin **extension functions whose own generic type parameter carries
+the bound** — never tighten the interface, never add a runtime
+`is Comparable<*>` cast, never make the method abstract just to dodge
+the issue. Concrete subtypes specialise by declaring a same-named
+member (no `override` keyword); Kotlin resolves to the member for the
+concrete static receiver type and to the extension for the interface
+type, exactly mirroring Rust's per-impl override of a trait default.
+When the bound lives on a *class* parameter rather than a trait method,
+fall back to the `Comparator<in K>` field pattern with a
+comparator-or-natural dispatch helper. See
+[AGENTS.md](./AGENTS.md) §"Trait default methods with `where` clauses"
+for the worked recipe and rationale.
+
 ## File Organization
 
 ```
