@@ -150,7 +150,6 @@ is the design contract, not a translation hack.
 - No repo-wide scripting (`find -exec`, blanket `sed`/`perl`, regex over many files).
 - Changes are task-scoped. Every touched file is named up front.
 - Small multi-file changes are allowed when mechanically coupled — primary file plus its `commonTest` and any required call-site rewires.
-- More than ~5 files in a single change? Stop and ask.
 
 ## Verification
 
