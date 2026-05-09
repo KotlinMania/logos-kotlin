@@ -7,9 +7,8 @@ package io.github.kotlinmania.logos.codegen
  */
 
 /**
- * Source-span placeholder. Upstream Rust uses `proc_macro2::Span` to point to a location in the
- * `#[derive(Logos)]` annotated source; the Kotlin port carries an integer offset from the start
- * of the input declaration string instead. Builders that don't have span info pass [NONE].
+ * Source-span pointing at a location in the lexer declaration: an integer byte offset from the
+ * start of the input declaration string. Builders that don't have span info pass [NONE].
  */
 data class CodegenSpan(val offset: Int = -1) {
     companion object {
@@ -17,17 +16,13 @@ data class CodegenSpan(val offset: Int = -1) {
     }
 }
 
-/**
- * A single error message with its associated [CodegenSpan].
- */
+/** A single error message with its associated [CodegenSpan]. */
 data class SpannedError(
     val message: String,
     val span: CodegenSpan,
 )
 
-/**
- * Collects errors raised while parsing the lexer declaration. Mirrors upstream `Errors`.
- */
+/** Collects errors raised while parsing the lexer declaration. */
 class Errors {
     private val collected: MutableList<SpannedError> = mutableListOf()
 
@@ -37,10 +32,8 @@ class Errors {
     }
 
     /**
-     * Render all collected errors as a single message. Upstream emits a `_logos_derive_compile_errors`
-     * Rust function containing `compile_error!()` invocations; the Kotlin port returns a multi-line
-     * string the caller can throw or surface in diagnostic output. Returns null when the collection
-     * is empty.
+     * Render all collected errors as a single multi-line message the caller can throw or surface
+     * in diagnostic output. Returns `null` when the collection is empty.
      */
     fun render(): String? {
         if (collected.isEmpty()) return null
