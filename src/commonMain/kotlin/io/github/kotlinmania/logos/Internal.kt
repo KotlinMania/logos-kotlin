@@ -15,7 +15,7 @@ import io.github.kotlinmania.logos.source.ChunkKind
  * # WARNING!
  *
  * **This trait, and its methods, are not meant to be used outside of the
- * code produced by the Kotlin builder/codegen for [Logos] tokens.**
+ * code produced by the `Logos` derive.**
  */
 interface LexerInternal<TToken : Logos<*>> {
     /** Get the current offset of token_start. */
@@ -48,11 +48,9 @@ sealed class CallbackResult<L : Logos<E>, E> {
 }
 
 /**
- * Trait converting a callback's return value into a [CallbackResult].
- *
- * The Rust upstream uses overlapping `impl` blocks on different return types (raw value, [Result],
- * [Filter], [FilterResult], [Skip], etc.). The Kotlin port exposes one constructor function per
- * return-type shape and the generated/builder code calls the matching one.
+ * Trait converting a callback's return value into a [CallbackResult]. Each entry point handles
+ * a single return-type shape (raw value, [Result], [Filter], [FilterResult], [Skip], …); the
+ * generated derive code calls the matching one.
  */
 object CallbackRetVal {
     /** Field-variant: callback returned a value `T`; emit `con(value)`. */
@@ -143,7 +141,7 @@ internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackRe
     is SkipResult.Error -> CallbackResult.Error(error)
 }
 
-/** Trait for skip-callback return types. Mirrors the upstream `SkipRetVal`. */
+/** Trait for skip-callback return types. */
 object SkipRetVal {
     /** Skip on `Unit`/`Skip`. */
     fun <L : Logos<E>, E> ofUnit(): SkipResult<L, E> = SkipResult.Skip()

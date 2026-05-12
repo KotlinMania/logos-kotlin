@@ -6,11 +6,11 @@ package io.github.kotlinmania.logos.source
  * Licensed under either of Apache-2.0 OR MIT.
  */
 
-//! This module contains a bunch of traits necessary for processing byte strings.
-//!
-//! Most notable are:
-//! * [Source] - implemented by default for `String` and `ByteArray` and wrapper types, used by the `Lexer`.
-//! * Slice - slices of [Source], returned by `Lexer.slice`.
+// This module contains a bunch of traits necessary for processing byte strings.
+//
+// Most notable are:
+// * [Source] - implemented by default for [String] and [ByteArray] and wrapper types, used by the `Lexer`.
+// * Slice - slices of [Source], returned by `Lexer.slice`.
 
 /**
  * Trait for types the `Lexer` can read from.
@@ -18,8 +18,6 @@ package io.github.kotlinmania.logos.source
  * Most notably this is implemented for [String] and [ByteArray]. It is unlikely you will
  * ever want to use this Trait yourself, unless implementing a new [Source]
  * the `Lexer` can use.
- *
- * The Kotlin port models the [Slice] associated type as a generic type parameter on the interface.
  */
 interface Source<TSlice> {
     /** Length of the source. */
@@ -33,11 +31,7 @@ interface Source<TSlice> {
      */
     fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C?
 
-    /**
-     * Get a slice of the source at given range.
-     *
-     * Equivalent to the Rust `slice::get(range)`.
-     */
+    /** Get a slice of the source at given range, or `null` if the range is out of bounds. */
     fun slice(start: Int, end: Int): TSlice?
 
     /**
