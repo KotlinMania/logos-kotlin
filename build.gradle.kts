@@ -408,6 +408,92 @@ mavenPublishing {
     }
 }
 
+// .github/workflows/codeql.yml invokes `./gradlew codeqlCompileJvm` to feed
+// CodeQL's Java/Kotlin extractor a single-target compile that still routes
+// through K2JVMCompiler.doExecute (the K2 multiplatform pipeline bypasses
+// it; the CodeQL Java agent's `KotlinInterceptor` only hooks doExecute).
+// See docs/ci-codeql.md for the working recipe.
+val codeqlKotlinc: Configuration by configurations.creating {
+    description = "Kotlin compiler (CodeQL extraction target only — not published)"
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+val codeqlSourceClasspath: Configuration by configurations.creating {
+    description = "Runtime classpath for CodeQL extraction of commonMain sources"
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+val codeqlAndroidAar: Configuration by configurations.creating {
+    description = "Android AAR siblings whose classes.jar contents feed CodeQL extraction"
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+dependencies {
+    codeqlKotlinc("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.21")
+    // Mirror commonMain dependency set, pinned to JVM artifact variants so
+    // the multiplatform kotlinx packages resolve without target attributes.
+    codeqlSourceClasspath("org.jetbrains.kotlin:kotlin-stdlib:2.3.21")
+    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0")
+    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0")
+    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.11.0")
+    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.4.0")
+}
+
+val codeqlCompileJvm = tasks.register<JavaExec>("codeqlCompileJvm") {
+    description =
+        "Compile commonMain Kotlin sources with kotlinc for CodeQL Java/Kotlin extraction."
+    group = "verification"
+
+    classpath(codeqlKotlinc)
+    mainClass.set("org.jetbrains.kotlin.cli.jvm.K2JVMCompiler")
+
+    val outDir = layout.buildDirectory.dir("classes/kotlin/codeql-jvm")
+    val aarOutDir = layout.buildDirectory.dir("codeql/android-aar")
+    val sources = fileTree("src/commonMain/kotlin") { include("**/*.kt") }
+    inputs.files(sources).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(codeqlSourceClasspath).withNormalizer(ClasspathNormalizer::class.java)
+    inputs.files(codeqlAndroidAar).withNormalizer(ClasspathNormalizer::class.java)
+    outputs.dir(outDir)
+    outputs.dir(aarOutDir)
+
+    doFirst {
+        outDir.get().asFile.mkdirs()
+        val extractedJars = mutableListOf<File>()
+        for (aar in codeqlAndroidAar.resolve()) {
+            val coordinateDir = aarOutDir.get().asFile.resolve(aar.nameWithoutExtension)
+            coordinateDir.mkdirs()
+            val classesJar = coordinateDir.resolve("classes.jar")
+            ZipInputStream(aar.inputStream().buffered()).use { zip ->
+                generateSequence { zip.nextEntry }.forEach { entry ->
+                    if (entry.name == "classes.jar") {
+                        Files.copy(zip, classesJar.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                    }
+                    zip.closeEntry()
+                }
+            }
+            if (classesJar.exists()) extractedJars += classesJar
+        }
+        val classpath =
+            (codeqlSourceClasspath.resolve() + extractedJars)
+                .joinToString(File.pathSeparator) { it.absolutePath }
+        args = listOf(
+            "-d", outDir.get().asFile.absolutePath,
+            "-classpath", classpath,
+            "-jvm-target", "21",
+            "-no-stdlib",
+            "-no-reflect",
+            "-language-version", "2.3",
+            "-api-version", "2.3",
+            "-opt-in", "kotlin.time.ExperimentalTime",
+            "-opt-in", "kotlin.concurrent.atomics.ExperimentalAtomicApi",
+            "-Xexpect-actual-classes",
+        ) + sources.files.map { it.absolutePath }
+    }
+}
+
 tasks.register("setupAndroidSdk") {
     group = "setup"
     description = "Downloads and configures the project-local Android SDK."
