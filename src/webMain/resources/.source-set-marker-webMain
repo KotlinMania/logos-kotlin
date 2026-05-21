@@ -1,0 +1,1 @@
+Empty marker so the Gradle processResources task for the webMain source set has input.
