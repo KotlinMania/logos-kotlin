@@ -39,7 +39,7 @@ import io.github.kotlinmania.logos.source.Source
  * The type parameter `E` is the error type associated with this token (defaults to [Unit] when
  * not customised).
  */
-interface Logos<E> {
+internal interface Logos<E> {
     /** The source slice type the lexer reads from. */
     val sourceSliceType: SourceSliceType
 
@@ -56,7 +56,7 @@ enum class SourceSliceType {
 }
 
 /** Per-token lexer definition: lexer construction plus the `lex` step the [Lexer] drives. */
-interface LexerDefinition<TToken : Logos<E>, TSlice, E> {
+internal interface LexerDefinition<TToken : Logos<E>, TSlice, E> {
     /**
      * Create a new instance of a [Lexer] that will produce tokens implementing this [Logos],
      * using the default extras value.
@@ -140,12 +140,12 @@ class Skip {
  * )
  * ```
  */
-sealed class Filter<T> {
+internal sealed class Filter<T> {
     /** Emit a token with a given value `T`. Use [Unit] for unit variants without fields. */
-    class Emit<T>(val value: T) : Filter<T>()
+    internal class Emit<T>(val value: T) : Filter<T>()
 
     /** Skip current match, analog to [Skip]. */
-    class Skip<T> : Filter<T>()
+    internal class Skip<T> : Filter<T>()
 }
 
 /**
@@ -198,15 +198,15 @@ sealed class Filter<T> {
  * )
  * ```
  */
-sealed class FilterResult<T, E> {
+internal sealed class FilterResult<T, E> {
     /** Emit a token with a given value `T`. Use [Unit] for unit variants without fields. */
-    class Emit<T, E>(val value: T) : FilterResult<T, E>()
+    internal class Emit<T, E>(val value: T) : FilterResult<T, E>()
 
     /** Skip current match, analog to [Skip]. */
-    class Skip<T, E> : FilterResult<T, E>()
+    internal class Skip<T, E> : FilterResult<T, E>()
 
     /** Emit a `<Token as Logos>::ERROR` token. */
-    class Error<T, E>(val error: E) : FilterResult<T, E>()
+    internal class Error<T, E>(val error: E) : FilterResult<T, E>()
 }
 
 /**

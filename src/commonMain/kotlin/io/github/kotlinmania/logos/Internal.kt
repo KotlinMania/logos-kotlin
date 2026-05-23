@@ -17,7 +17,7 @@ import io.github.kotlinmania.logos.source.ChunkKind
  * **This trait, and its methods, are not meant to be used outside of the
  * code produced by the `Logos` derive.**
  */
-interface LexerInternal<TToken : Logos<*>> {
+internal interface LexerInternal<TToken : Logos<*>> {
     /** Get the current offset of token_start. */
     fun offset(): Int
 
@@ -40,11 +40,11 @@ interface LexerInternal<TToken : Logos<*>> {
 /**
  * Result returned from a callback associated with a token variant.
  */
-sealed class CallbackResult<L : Logos<E>, E> {
-    class Emit<L : Logos<E>, E>(val token: L) : CallbackResult<L, E>()
-    class Error<L : Logos<E>, E>(val error: E) : CallbackResult<L, E>()
-    class DefaultError<L : Logos<E>, E> : CallbackResult<L, E>()
-    class Skip<L : Logos<E>, E> : CallbackResult<L, E>()
+internal sealed class CallbackResult<L : Logos<E>, E> {
+    internal class Emit<L : Logos<E>, E>(val token: L) : CallbackResult<L, E>()
+    internal class Error<L : Logos<E>, E>(val error: E) : CallbackResult<L, E>()
+    internal class DefaultError<L : Logos<E>, E> : CallbackResult<L, E>()
+    internal class Skip<L : Logos<E>, E> : CallbackResult<L, E>()
 }
 
 /**
@@ -52,7 +52,7 @@ sealed class CallbackResult<L : Logos<E>, E> {
  * a single return-type shape (raw value, [Result], [Filter], [FilterResult], [Skip], …); the
  * generated derive code calls the matching one.
  */
-object CallbackRetVal {
+internal object CallbackRetVal {
     /** Field-variant: callback returned a value `T`; emit `con(value)`. */
     fun <T, L : Logos<E>, E> emitValue(value: T, con: (T) -> L): CallbackResult<L, E> {
         return CallbackResult.Emit(con(value))
@@ -140,9 +140,9 @@ object CallbackRetVal {
 }
 
 /** Result returned from a "skip" callback. */
-sealed class SkipResult<L : Logos<E>, E> {
-    class Skip<L : Logos<E>, E> : SkipResult<L, E>()
-    class Error<L : Logos<E>, E>(val error: E) : SkipResult<L, E>()
+internal sealed class SkipResult<L : Logos<E>, E> {
+    internal class Skip<L : Logos<E>, E> : SkipResult<L, E>()
+    internal class Error<L : Logos<E>, E>(val error: E) : SkipResult<L, E>()
 }
 
 internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackResult<L, E> = when (this) {
@@ -151,7 +151,7 @@ internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackRe
 }
 
 /** Trait for skip-callback return types. */
-object SkipRetVal {
+internal object SkipRetVal {
     /**
      * Skip on `Unit`/`Skip`.
      *

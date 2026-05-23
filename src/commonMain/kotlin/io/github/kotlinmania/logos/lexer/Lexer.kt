@@ -27,7 +27,7 @@ data class Span(val start: Int, val endExclusive: Int) {
  * - [E] — the error type returned by the lexer.
  * - [Extras] — extras associated with the token (defaults to [Unit]).
  */
-class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
+internal class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
     private val sourceRef: Source<TSlice>,
     private val definition: LexerDefinition<TToken, TSlice, E>,
     private var tokenStart: Int = 0,
@@ -179,7 +179,7 @@ class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
  *
  * Look at [Lexer.spanned] for documentation.
  */
-class SpannedIter<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
+internal class SpannedIter<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
     private val lexer: Lexer<TToken, TSlice, E, Extras>,
 ) : Iterator<Pair<Result<TToken>, Span>> {
     override fun hasNext(): Boolean = lexer.hasNext()
