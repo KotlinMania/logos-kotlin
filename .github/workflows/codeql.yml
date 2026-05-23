@@ -12,7 +12,7 @@ name: "CodeQL Advanced"
 #   - java-kotlin         (manual build via codeqlCompileJvm — see note below)
 #   - javascript-typescript (source-only)
 #
-# For java-kotlin, the matrix-shared `Initialize CodeQL -> Perform CodeQL
+# For java-kotlin, the matrix-shared `Initialize CodeQL → Perform CodeQL
 # Analysis` flow is augmented with two conditional steps that run ONLY
 # for that language:
 #
@@ -34,9 +34,9 @@ name: "CodeQL Advanced"
 
 on:
   schedule:
-    - cron: "0 7 * * 1"
-  workflow_dispatch:
+    - cron: '44 16 * * 0'
 
+  workflow_dispatch:
 permissions:
   contents: read
 

@@ -93,8 +93,17 @@ object CallbackRetVal {
         return if (value) CallbackResult.Emit(con()) else CallbackResult.DefaultError()
     }
 
-    /** Unit-variant: callback returned [Skip]; always skip. */
-    fun <L : Logos<E>, E> emitSkip(): CallbackResult<L, E> = CallbackResult.Skip()
+    /**
+     * Unit-variant: callback returned [Skip]; always skip.
+     *
+     * Marked `internal` because the no-argument generic shape can't carry
+     * L/E through the Swift Export bridge — the bridge call site fails
+     * `compileSwiftExportMainKotlinMacosArm64` with
+     * `Cannot infer type for type parameter 'L' / 'E'`. Common Kotlin
+     * callers (the generated derive code) spell the types at the call site
+     * directly.
+     */
+    internal fun <L : Logos<E>, E> emitSkip(): CallbackResult<L, E> = CallbackResult.Skip()
 
     /** Unit-variant: callback returned [Result] of [Skip]; skip on success, error on failure. */
     fun <L : Logos<E>, E> emitResultSkip(
@@ -143,10 +152,18 @@ internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackRe
 
 /** Trait for skip-callback return types. */
 object SkipRetVal {
-    /** Skip on `Unit`/`Skip`. */
-    fun <L : Logos<E>, E> ofUnit(): SkipResult<L, E> = SkipResult.Skip()
+    /**
+     * Skip on `Unit`/`Skip`.
+     *
+     * Marked `internal` because the no-argument generic shape can't carry
+     * L/E through the Swift Export bridge — fails with
+     * `Cannot infer type for type parameter 'L' / 'E'`. Common Kotlin
+     * callers spell the types at the call site directly.
+     */
+    internal fun <L : Logos<E>, E> ofUnit(): SkipResult<L, E> = SkipResult.Skip()
 
-    fun <L : Logos<E>, E> ofSkip(): SkipResult<L, E> = SkipResult.Skip()
+    /** Same Swift-Export-inference rationale as [ofUnit]. */
+    internal fun <L : Logos<E>, E> ofSkip(): SkipResult<L, E> = SkipResult.Skip()
 
     /** Skip on `Ok`, error on `Err`. */
     fun <L : Logos<E>, E> ofResultUnit(result: Result<Unit>, errorAdapter: (Throwable) -> E): SkipResult<L, E> {
