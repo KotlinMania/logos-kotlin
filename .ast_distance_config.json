@@ -1,6 +1,5 @@
 {
   "type": "maintenance",
-  "parity_mode": false,
   "name": "logos-kotlin",
   "source": {
     "path": "tmp/logos/src",
