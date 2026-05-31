@@ -22,16 +22,12 @@ data class Span(val start: Int, val endExclusive: Int) {
  * [Lexer] is the main struct of the crate that allows you to read through a [Source]
  * and produce tokens for types implementing [Logos].
  *
- * The Rust upstream uses associated types `Token::Source`, `Token::Extras`, and `Token::Error` on
- * the [Logos] trait. Kotlin doesn't have associated types, so the Kotlin port carries those as
- * generic parameters on the [Lexer] type:
- *
  * - [TToken] — the token type (must implement [Logos]).
  * - [TSlice] — the source slice type (e.g. [String] or [ByteArray]).
  * - [E] — the error type returned by the lexer.
  * - [Extras] — extras associated with the token (defaults to [Unit]).
  */
-class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
+internal class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
     private val sourceRef: Source<TSlice>,
     private val definition: LexerDefinition<TToken, TSlice, E>,
     private var tokenStart: Int = 0,
@@ -183,7 +179,7 @@ class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
  *
  * Look at [Lexer.spanned] for documentation.
  */
-class SpannedIter<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
+internal class SpannedIter<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
     private val lexer: Lexer<TToken, TSlice, E, Extras>,
 ) : Iterator<Pair<Result<TToken>, Span>> {
     override fun hasNext(): Boolean = lexer.hasNext()

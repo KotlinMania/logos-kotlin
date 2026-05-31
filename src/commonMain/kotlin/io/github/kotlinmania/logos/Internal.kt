@@ -15,9 +15,9 @@ import io.github.kotlinmania.logos.source.ChunkKind
  * # WARNING!
  *
  * **This trait, and its methods, are not meant to be used outside of the
- * code produced by the Kotlin builder/codegen for [Logos] tokens.**
+ * code produced by the `Logos` derive.**
  */
-interface LexerInternal<TToken : Logos<*>> {
+internal interface LexerInternal<TToken : Logos<*>> {
     /** Get the current offset of token_start. */
     fun offset(): Int
 
@@ -40,21 +40,19 @@ interface LexerInternal<TToken : Logos<*>> {
 /**
  * Result returned from a callback associated with a token variant.
  */
-sealed class CallbackResult<L : Logos<E>, E> {
-    class Emit<L : Logos<E>, E>(val token: L) : CallbackResult<L, E>()
-    class Error<L : Logos<E>, E>(val error: E) : CallbackResult<L, E>()
-    class DefaultError<L : Logos<E>, E> : CallbackResult<L, E>()
-    class Skip<L : Logos<E>, E> : CallbackResult<L, E>()
+internal sealed class CallbackResult<L : Logos<E>, E> {
+    internal class Emit<L : Logos<E>, E>(val token: L) : CallbackResult<L, E>()
+    internal class Error<L : Logos<E>, E>(val error: E) : CallbackResult<L, E>()
+    internal class DefaultError<L : Logos<E>, E> : CallbackResult<L, E>()
+    internal class Skip<L : Logos<E>, E> : CallbackResult<L, E>()
 }
 
 /**
- * Trait converting a callback's return value into a [CallbackResult].
- *
- * The Rust upstream uses overlapping `impl` blocks on different return types (raw value, [Result],
- * [Filter], [FilterResult], [Skip], etc.). The Kotlin port exposes one constructor function per
- * return-type shape and the generated/builder code calls the matching one.
+ * Trait converting a callback's return value into a [CallbackResult]. Each entry point handles
+ * a single return-type shape (raw value, [Result], [Filter], [FilterResult], [Skip], …); the
+ * generated derive code calls the matching one.
  */
-object CallbackRetVal {
+internal object CallbackRetVal {
     /** Field-variant: callback returned a value `T`; emit `con(value)`. */
     fun <T, L : Logos<E>, E> emitValue(value: T, con: (T) -> L): CallbackResult<L, E> {
         return CallbackResult.Emit(con(value))
@@ -95,8 +93,17 @@ object CallbackRetVal {
         return if (value) CallbackResult.Emit(con()) else CallbackResult.DefaultError()
     }
 
-    /** Unit-variant: callback returned [Skip]; always skip. */
-    fun <L : Logos<E>, E> emitSkip(): CallbackResult<L, E> = CallbackResult.Skip()
+    /**
+     * Unit-variant: callback returned [Skip]; always skip.
+     *
+     * Marked `internal` because the no-argument generic shape can't carry
+     * L/E through the Swift Export bridge — the bridge call site fails
+     * `compileSwiftExportMainKotlinMacosArm64` with
+     * `Cannot infer type for type parameter 'L' / 'E'`. Common Kotlin
+     * callers (the generated derive code) spell the types at the call site
+     * directly.
+     */
+    internal fun <L : Logos<E>, E> emitSkip(): CallbackResult<L, E> = CallbackResult.Skip()
 
     /** Unit-variant: callback returned [Result] of [Skip]; skip on success, error on failure. */
     fun <L : Logos<E>, E> emitResultSkip(
@@ -133,9 +140,9 @@ object CallbackRetVal {
 }
 
 /** Result returned from a "skip" callback. */
-sealed class SkipResult<L : Logos<E>, E> {
-    class Skip<L : Logos<E>, E> : SkipResult<L, E>()
-    class Error<L : Logos<E>, E>(val error: E) : SkipResult<L, E>()
+internal sealed class SkipResult<L : Logos<E>, E> {
+    internal class Skip<L : Logos<E>, E> : SkipResult<L, E>()
+    internal class Error<L : Logos<E>, E>(val error: E) : SkipResult<L, E>()
 }
 
 internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackResult<L, E> = when (this) {
@@ -143,12 +150,20 @@ internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackRe
     is SkipResult.Error -> CallbackResult.Error(error)
 }
 
-/** Trait for skip-callback return types. Mirrors the upstream `SkipRetVal`. */
-object SkipRetVal {
-    /** Skip on `Unit`/`Skip`. */
-    fun <L : Logos<E>, E> ofUnit(): SkipResult<L, E> = SkipResult.Skip()
+/** Trait for skip-callback return types. */
+internal object SkipRetVal {
+    /**
+     * Skip on `Unit`/`Skip`.
+     *
+     * Marked `internal` because the no-argument generic shape can't carry
+     * L/E through the Swift Export bridge — fails with
+     * `Cannot infer type for type parameter 'L' / 'E'`. Common Kotlin
+     * callers spell the types at the call site directly.
+     */
+    internal fun <L : Logos<E>, E> ofUnit(): SkipResult<L, E> = SkipResult.Skip()
 
-    fun <L : Logos<E>, E> ofSkip(): SkipResult<L, E> = SkipResult.Skip()
+    /** Same Swift-Export-inference rationale as [ofUnit]. */
+    internal fun <L : Logos<E>, E> ofSkip(): SkipResult<L, E> = SkipResult.Skip()
 
     /** Skip on `Ok`, error on `Err`. */
     fun <L : Logos<E>, E> ofResultUnit(result: Result<Unit>, errorAdapter: (Throwable) -> E): SkipResult<L, E> {

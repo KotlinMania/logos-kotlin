@@ -6,11 +6,11 @@ package io.github.kotlinmania.logos.source
  * Licensed under either of Apache-2.0 OR MIT.
  */
 
-//! This module contains a bunch of traits necessary for processing byte strings.
-//!
-//! Most notable are:
-//! * [Source] - implemented by default for `String` and `ByteArray` and wrapper types, used by the `Lexer`.
-//! * Slice - slices of [Source], returned by `Lexer.slice`.
+// This module contains a bunch of traits necessary for processing byte strings.
+//
+// Most notable are:
+// * [Source] - implemented by default for [String] and [ByteArray] and wrapper types, used by the `Lexer`.
+// * Slice - slices of [Source], returned by `Lexer.slice`.
 
 /**
  * Trait for types the `Lexer` can read from.
@@ -18,10 +18,8 @@ package io.github.kotlinmania.logos.source
  * Most notably this is implemented for [String] and [ByteArray]. It is unlikely you will
  * ever want to use this Trait yourself, unless implementing a new [Source]
  * the `Lexer` can use.
- *
- * The Kotlin port models the [Slice] associated type as a generic type parameter on the interface.
  */
-interface Source<TSlice> {
+internal interface Source<TSlice> {
     /** Length of the source. */
     fun len(): Int
 
@@ -33,11 +31,7 @@ interface Source<TSlice> {
      */
     fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C?
 
-    /**
-     * Get a slice of the source at given range.
-     *
-     * Equivalent to the Rust `slice::get(range)`.
-     */
+    /** Get a slice of the source at given range, or `null` if the range is out of bounds. */
     fun slice(start: Int, end: Int): TSlice?
 
     /**
@@ -69,7 +63,7 @@ interface Source<TSlice> {
  * A [Source] backed by a [String]. The slice type is [String]; the source is interpreted as a
  * sequence of UTF-8 bytes.
  */
-class StringSource(private val source: String) : Source<String> {
+internal class StringSource(private val source: String) : Source<String> {
     private val bytes: ByteArray = source.encodeToByteArray()
 
     override fun len(): Int = bytes.size
@@ -117,7 +111,7 @@ class StringSource(private val source: String) : Source<String> {
 /**
  * A [Source] backed by a [ByteArray]. The slice type is [ByteArray]; the source is binary.
  */
-class ByteArraySource(private val bytes: ByteArray) : Source<ByteArray> {
+internal class ByteArraySource(private val bytes: ByteArray) : Source<ByteArray> {
     override fun len(): Int = bytes.size
 
     override fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C? {
@@ -153,23 +147,23 @@ class ByteArraySource(private val bytes: ByteArray) : Source<ByteArray> {
 interface Chunk
 
 /** Per-chunk-type metadata: size and constructor. */
-abstract class ChunkKind<C : Chunk>(val size: Int) {
+internal abstract class ChunkKind<C : Chunk>(val size: Int) {
     abstract fun fromBytes(bytes: ByteArray, offset: Int): C
 }
 
 /** Single-byte chunk. */
-data class ChunkByte(val value: Byte) : Chunk {
-    companion object Kind : ChunkKind<ChunkByte>(size = 1) {
+internal data class ChunkByte(val value: Byte) : Chunk {
+    internal companion object Kind : ChunkKind<ChunkByte>(size = 1) {
         override fun fromBytes(bytes: ByteArray, offset: Int): ChunkByte = ChunkByte(bytes[offset])
     }
 }
 
 /** N-byte chunk. */
-class ChunkBytes(val bytes: ByteArray) : Chunk {
+internal class ChunkBytes(val bytes: ByteArray) : Chunk {
     override fun equals(other: Any?): Boolean = other is ChunkBytes && bytes.contentEquals(other.bytes)
     override fun hashCode(): Int = bytes.contentHashCode()
 
-    companion object {
+    internal companion object {
         /** Build a [ChunkKind] for chunks of exactly [n] bytes. */
         fun kind(n: Int): ChunkKind<ChunkBytes> = object : ChunkKind<ChunkBytes>(size = n) {
             override fun fromBytes(bytes: ByteArray, offset: Int): ChunkBytes =

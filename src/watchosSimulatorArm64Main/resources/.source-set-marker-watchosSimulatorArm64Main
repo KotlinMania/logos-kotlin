@@ -1,0 +1,1 @@
+Empty marker so the Gradle processResources task for the watchosSimulatorArm64Main source set has input.
