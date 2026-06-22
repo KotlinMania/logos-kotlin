@@ -143,7 +143,7 @@ See [LICENSE-APACHE](https://github.com/maciejhirsz/logos/blob/HEAD/LICENSE-APAC
 
 ```kotlin
 dependencies {
-    implementation("io.github.kotlinmania:logos:0.1.0")
+    implementation("io.github.kotlinmania:logos:0.2.0")
 }
 ```
 
