@@ -3,15 +3,16 @@ package io.github.kotlinmania.logos.codegen
 
 import io.github.kotlinmania.procmacro2.Delimiter
 import io.github.kotlinmania.procmacro2.Group
-import io.github.kotlinmania.procmacro2.Span
 import io.github.kotlinmania.procmacro2.Spacing
+import io.github.kotlinmania.procmacro2.Span
 import io.github.kotlinmania.procmacro2.TokenStream
 import io.github.kotlinmania.procmacro2.TokenTree
 import io.github.kotlinmania.quote.ToTokens
 import io.github.kotlinmania.syn.Ident
 
-class MaybeVoid(private var stream: TokenStream?) : ToTokens {
-
+class MaybeVoid(
+    private var stream: TokenStream?,
+) : ToTokens {
     fun replace(stream: TokenStream): MaybeVoid {
         val old = this.stream
         this.stream = stream
@@ -53,6 +54,7 @@ class MaybeVoid(private var stream: TokenStream?) : ToTokens {
 
     companion object {
         val VOID: MaybeVoid = MaybeVoid(null)
+
         fun some(stream: TokenStream): MaybeVoid = MaybeVoid(stream)
     }
 }

@@ -82,19 +82,21 @@ class FilterResultTest {
     fun whenExpressionExhaustsAllThreeBranches() {
         // Exercise that the sealed hierarchy is exhaustive in `when`: this would fail to compile
         // (or warn-as-error under allWarningsAsErrors) if a branch were missing.
-        val cases: List<FilterResult<Int, String>> = listOf(
-            FilterResult.Emit(1),
-            FilterResult.Skip(),
-            FilterResult.Error("oops"),
-        )
+        val cases: List<FilterResult<Int, String>> =
+            listOf(
+                FilterResult.Emit(1),
+                FilterResult.Skip(),
+                FilterResult.Error("oops"),
+            )
 
-        val labels = cases.map { case ->
-            when (case) {
-                is FilterResult.Emit -> "emit"
-                is FilterResult.Skip -> "skip"
-                is FilterResult.Error -> "error"
+        val labels =
+            cases.map { case ->
+                when (case) {
+                    is FilterResult.Emit -> "emit"
+                    is FilterResult.Skip -> "skip"
+                    is FilterResult.Error -> "error"
+                }
             }
-        }
         assertEquals(listOf("emit", "skip", "error"), labels)
     }
 }

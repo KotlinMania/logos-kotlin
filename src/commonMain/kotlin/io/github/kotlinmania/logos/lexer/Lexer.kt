@@ -6,15 +6,18 @@ package io.github.kotlinmania.logos.lexer
  * Licensed under either of Apache-2.0 OR MIT.
  */
 
-import io.github.kotlinmania.logos.LexerInternal
 import io.github.kotlinmania.logos.LexerDefinition
+import io.github.kotlinmania.logos.LexerInternal
 import io.github.kotlinmania.logos.Logos
 import io.github.kotlinmania.logos.source.Chunk
 import io.github.kotlinmania.logos.source.ChunkKind
 import io.github.kotlinmania.logos.source.Source
 
 /** Byte range in the source. */
-data class Span(val start: Int, val endExclusive: Int) {
+data class Span(
+    val start: Int,
+    val endExclusive: Int,
+) {
     val length: Int get() = endExclusive - start
 }
 
@@ -34,7 +37,8 @@ internal class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
     private var tokenEnd: Int = 0,
     /** Extras associated with the token. */
     var extras: Extras,
-) : LexerInternal<TToken>, Iterator<Result<TToken>> {
+) : LexerInternal<TToken>,
+    Iterator<Result<TToken>> {
     companion object {
         /**
          * Create a new [Lexer].
@@ -45,24 +49,21 @@ internal class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
         fun <TToken : Logos<E>, TSlice, E> new(
             source: Source<TSlice>,
             definition: LexerDefinition<TToken, TSlice, E>,
-        ): Lexer<TToken, TSlice, E, Unit> {
-            return withExtras(source, definition, Unit)
-        }
+        ): Lexer<TToken, TSlice, E, Unit> = withExtras(source, definition, Unit)
 
         /** Create a new [Lexer] with the provided extras. */
         fun <TToken : Logos<E>, TSlice, E, Extras> withExtras(
             source: Source<TSlice>,
             definition: LexerDefinition<TToken, TSlice, E>,
             extras: Extras,
-        ): Lexer<TToken, TSlice, E, Extras> {
-            return Lexer(
+        ): Lexer<TToken, TSlice, E, Extras> =
+            Lexer(
                 sourceRef = source,
                 definition = definition,
                 tokenStart = 0,
                 tokenEnd = 0,
                 extras = extras,
             )
-        }
     }
 
     /** Source from which this Lexer is reading tokens. */
@@ -77,14 +78,10 @@ internal class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
     fun span(): Span = Span(tokenStart, tokenEnd)
 
     /** Get a string slice of the current token. */
-    fun slice(): TSlice {
-        return sourceRef.sliceUnchecked(tokenStart, tokenEnd)
-    }
+    fun slice(): TSlice = sourceRef.sliceUnchecked(tokenStart, tokenEnd)
 
     /** Get a slice of remaining source, starting at the end of current token. */
-    fun remainder(): TSlice {
-        return sourceRef.sliceUnchecked(tokenEnd, sourceRef.len())
-    }
+    fun remainder(): TSlice = sourceRef.sliceUnchecked(tokenEnd, sourceRef.len())
 
     /**
      * Turn this lexer into a lexer for a new token type.
@@ -95,15 +92,14 @@ internal class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
     fun <TToken2 : Logos<E2>, E2, Extras2> morph(
         definition2: LexerDefinition<TToken2, TSlice, E2>,
         extrasAdapter: (Extras) -> Extras2,
-    ): Lexer<TToken2, TSlice, E2, Extras2> {
-        return Lexer(
+    ): Lexer<TToken2, TSlice, E2, Extras2> =
+        Lexer(
             sourceRef = sourceRef,
             definition = definition2,
             tokenStart = tokenStart,
             tokenEnd = tokenEnd,
             extras = extrasAdapter(extras),
         )
-    }
 
     /**
      * Bumps the end of currently lexed token by `n` bytes.
@@ -150,9 +146,7 @@ internal class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
      * Read a [Chunk] at the current position of the [Lexer]. If the end of the [Source] has been
      * reached, this will return null.
      */
-    override fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C? {
-        return sourceRef.read(offset, chunk)
-    }
+    override fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C? = sourceRef.read(offset, chunk)
 
     /** Reset `tokenStart` to `tokenEnd`. */
     override fun trivia() {

@@ -41,9 +41,16 @@ internal interface LexerInternal<TToken : Logos<*>> {
  * Result returned from a callback associated with a token variant.
  */
 internal sealed class CallbackResult<L : Logos<E>, E> {
-    internal class Emit<L : Logos<E>, E>(val token: L) : CallbackResult<L, E>()
-    internal class Error<L : Logos<E>, E>(val error: E) : CallbackResult<L, E>()
+    internal class Emit<L : Logos<E>, E>(
+        val token: L,
+    ) : CallbackResult<L, E>()
+
+    internal class Error<L : Logos<E>, E>(
+        val error: E,
+    ) : CallbackResult<L, E>()
+
     internal class DefaultError<L : Logos<E>, E> : CallbackResult<L, E>()
+
     internal class Skip<L : Logos<E>, E> : CallbackResult<L, E>()
 }
 
@@ -54,44 +61,35 @@ internal sealed class CallbackResult<L : Logos<E>, E> {
  */
 internal object CallbackRetVal {
     /** Field-variant: callback returned a value `T`; emit `con(value)`. */
-    fun <T, L : Logos<E>, E> emitValue(value: T, con: (T) -> L): CallbackResult<L, E> {
-        return CallbackResult.Emit(con(value))
-    }
+    fun <T, L : Logos<E>, E> emitValue(value: T, con: (T) -> L): CallbackResult<L, E> = CallbackResult.Emit(con(value))
 
     /** Field-variant: callback returned [Result]; emit on success, error on failure. */
-    fun <T, L : Logos<E>, E> emitResult(result: Result<T>, con: (T) -> L, errorAdapter: (Throwable) -> E): CallbackResult<L, E> {
-        return result.fold(
+    fun <T, L : Logos<E>, E> emitResult(result: Result<T>, con: (T) -> L, errorAdapter: (Throwable) -> E): CallbackResult<L, E> =
+        result.fold(
             onSuccess = { CallbackResult.Emit(con(it)) },
             onFailure = { CallbackResult.Error(errorAdapter(it)) },
         )
-    }
 
     /** Field-variant: callback returned a nullable; emit if non-null else default error. */
-    fun <T, L : Logos<E>, E> emitOption(value: T?, con: (T) -> L): CallbackResult<L, E> {
-        return if (value != null) CallbackResult.Emit(con(value)) else CallbackResult.DefaultError()
-    }
+    fun <T, L : Logos<E>, E> emitOption(value: T?, con: (T) -> L): CallbackResult<L, E> = if (value != null) CallbackResult.Emit(con(value)) else CallbackResult.DefaultError()
 
     /** Field-variant: callback returned a [Filter]; emit/skip per filter. */
-    fun <T, L : Logos<E>, E> emitFilter(filter: Filter<T>, con: (T) -> L): CallbackResult<L, E> {
-        return when (filter) {
+    fun <T, L : Logos<E>, E> emitFilter(filter: Filter<T>, con: (T) -> L): CallbackResult<L, E> =
+        when (filter) {
             is Filter.Emit -> CallbackResult.Emit(con(filter.value))
             is Filter.Skip -> CallbackResult.Skip()
         }
-    }
 
     /** Field-variant: callback returned a [FilterResult]; emit/skip/error per filter result. */
-    fun <T, L : Logos<E>, E> emitFilterResult(filter: FilterResult<T, E>, con: (T) -> L): CallbackResult<L, E> {
-        return when (filter) {
+    fun <T, L : Logos<E>, E> emitFilterResult(filter: FilterResult<T, E>, con: (T) -> L): CallbackResult<L, E> =
+        when (filter) {
             is FilterResult.Emit -> CallbackResult.Emit(con(filter.value))
             is FilterResult.Skip -> CallbackResult.Skip()
             is FilterResult.Error -> CallbackResult.Error(filter.error)
         }
-    }
 
     /** Unit-variant: callback returned [Boolean]; emit on true, default error on false. */
-    fun <L : Logos<E>, E> emitBoolean(value: Boolean, con: () -> L): CallbackResult<L, E> {
-        return if (value) CallbackResult.Emit(con()) else CallbackResult.DefaultError()
-    }
+    fun <L : Logos<E>, E> emitBoolean(value: Boolean, con: () -> L): CallbackResult<L, E> = if (value) CallbackResult.Emit(con()) else CallbackResult.DefaultError()
 
     /**
      * Unit-variant: callback returned [Skip]; always skip.
@@ -109,46 +107,45 @@ internal object CallbackRetVal {
     fun <L : Logos<E>, E> emitResultSkip(
         result: Result<Skip>,
         errorAdapter: (Throwable) -> E,
-    ): CallbackResult<L, E> {
-        return result.fold(
+    ): CallbackResult<L, E> =
+        result.fold(
             onSuccess = { CallbackResult.Skip() },
             onFailure = { CallbackResult.Error(errorAdapter(it)) },
         )
-    }
 
     /** Unit-variant: callback returned a token directly; emit it. */
-    fun <L : Logos<E>, E> emitToken(token: L): CallbackResult<L, E> {
-        return CallbackResult.Emit(token)
-    }
+    fun <L : Logos<E>, E> emitToken(token: L): CallbackResult<L, E> = CallbackResult.Emit(token)
 
     /** Unit-variant: callback returned a [Filter] of token; emit/skip. */
-    fun <L : Logos<E>, E> emitFilterToken(filter: Filter<L>): CallbackResult<L, E> {
-        return when (filter) {
+    fun <L : Logos<E>, E> emitFilterToken(filter: Filter<L>): CallbackResult<L, E> =
+        when (filter) {
             is Filter.Emit -> CallbackResult.Emit(filter.value)
             is Filter.Skip -> CallbackResult.Skip()
         }
-    }
 
     /** Unit-variant: callback returned a [FilterResult] of token; emit/skip/error. */
-    fun <L : Logos<E>, E> emitFilterResultToken(filter: FilterResult<L, E>): CallbackResult<L, E> {
-        return when (filter) {
+    fun <L : Logos<E>, E> emitFilterResultToken(filter: FilterResult<L, E>): CallbackResult<L, E> =
+        when (filter) {
             is FilterResult.Emit -> CallbackResult.Emit(filter.value)
             is FilterResult.Skip -> CallbackResult.Skip()
             is FilterResult.Error -> CallbackResult.Error(filter.error)
         }
-    }
 }
 
 /** Result returned from a "skip" callback. */
 internal sealed class SkipResult<L : Logos<E>, E> {
     internal class Skip<L : Logos<E>, E> : SkipResult<L, E>()
-    internal class Error<L : Logos<E>, E>(val error: E) : SkipResult<L, E>()
+
+    internal class Error<L : Logos<E>, E>(
+        val error: E,
+    ) : SkipResult<L, E>()
 }
 
-internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackResult<L, E> = when (this) {
-    is SkipResult.Skip -> CallbackResult.Skip()
-    is SkipResult.Error -> CallbackResult.Error(error)
-}
+internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackResult<L, E> =
+    when (this) {
+        is SkipResult.Skip -> CallbackResult.Skip()
+        is SkipResult.Error -> CallbackResult.Error(error)
+    }
 
 /** Trait for skip-callback return types. */
 internal object SkipRetVal {
@@ -166,17 +163,15 @@ internal object SkipRetVal {
     internal fun <L : Logos<E>, E> ofSkip(): SkipResult<L, E> = SkipResult.Skip()
 
     /** Skip on `Ok`, error on `Err`. */
-    fun <L : Logos<E>, E> ofResultUnit(result: Result<Unit>, errorAdapter: (Throwable) -> E): SkipResult<L, E> {
-        return result.fold(
+    fun <L : Logos<E>, E> ofResultUnit(result: Result<Unit>, errorAdapter: (Throwable) -> E): SkipResult<L, E> =
+        result.fold(
             onSuccess = { SkipResult.Skip() },
             onFailure = { SkipResult.Error(errorAdapter(it)) },
         )
-    }
 
-    fun <L : Logos<E>, E> ofResultSkip(result: Result<Skip>, errorAdapter: (Throwable) -> E): SkipResult<L, E> {
-        return result.fold(
+    fun <L : Logos<E>, E> ofResultSkip(result: Result<Skip>, errorAdapter: (Throwable) -> E): SkipResult<L, E> =
+        result.fold(
             onSuccess = { SkipResult.Skip() },
             onFailure = { SkipResult.Error(errorAdapter(it)) },
         )
-    }
 }
