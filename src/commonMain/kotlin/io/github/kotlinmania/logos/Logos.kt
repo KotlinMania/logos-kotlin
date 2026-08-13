@@ -51,6 +51,7 @@ internal interface Logos<E> {
 enum class SourceSliceType {
     /** UTF-8 string source; slices are [String]. */
     STR,
+
     /** Binary byte source; slices are [ByteArray]. */
     BYTES,
 }
@@ -142,7 +143,9 @@ class Skip {
  */
 internal sealed class Filter<T> {
     /** Emit a token with a given value `T`. Use [Unit] for unit variants without fields. */
-    internal class Emit<T>(val value: T) : Filter<T>()
+    internal class Emit<T>(
+        val value: T,
+    ) : Filter<T>()
 
     /** Skip current match, analog to [Skip]. */
     internal class Skip<T> : Filter<T>()
@@ -200,13 +203,17 @@ internal sealed class Filter<T> {
  */
 internal sealed class FilterResult<T, E> {
     /** Emit a token with a given value `T`. Use [Unit] for unit variants without fields. */
-    internal class Emit<T, E>(val value: T) : FilterResult<T, E>()
+    internal class Emit<T, E>(
+        val value: T,
+    ) : FilterResult<T, E>()
 
     /** Skip current match, analog to [Skip]. */
     internal class Skip<T, E> : FilterResult<T, E>()
 
     /** Emit a `<Token as Logos>::ERROR` token. */
-    internal class Error<T, E>(val error: E) : FilterResult<T, E>()
+    internal class Error<T, E>(
+        val error: E,
+    ) : FilterResult<T, E>()
 }
 
 /**

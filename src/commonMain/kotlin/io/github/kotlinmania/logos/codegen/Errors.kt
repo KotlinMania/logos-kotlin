@@ -10,7 +10,9 @@ package io.github.kotlinmania.logos.codegen
  * Source-span pointing at a location in the lexer declaration: an integer byte offset from the
  * start of the input declaration string. Builders that don't have span info pass [NONE].
  */
-data class CodegenSpan(val offset: Int = -1) {
+data class CodegenSpan(
+    val offset: Int = -1,
+) {
     companion object {
         val NONE: CodegenSpan = CodegenSpan(-1)
     }

@@ -63,18 +63,19 @@ internal interface Source<TSlice> {
  * A [Source] backed by a [String]. The slice type is [String]; the source is interpreted as a
  * sequence of UTF-8 bytes.
  */
-internal class StringSource(private val source: String) : Source<String> {
+internal class StringSource(
+    private val source: String,
+) : Source<String> {
     private val bytes: ByteArray = source.encodeToByteArray()
 
     override fun len(): Int = bytes.size
 
-    override fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C? {
-        return if (offset + (chunk.size - 1) < bytes.size) {
+    override fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C? =
+        if (offset + (chunk.size - 1) < bytes.size) {
             chunk.fromBytes(bytes, offset)
         } else {
             null
         }
-    }
 
     override fun slice(start: Int, end: Int): String? {
         if (start < 0 || end < start || end > bytes.size) return null
@@ -111,16 +112,17 @@ internal class StringSource(private val source: String) : Source<String> {
 /**
  * A [Source] backed by a [ByteArray]. The slice type is [ByteArray]; the source is binary.
  */
-internal class ByteArraySource(private val bytes: ByteArray) : Source<ByteArray> {
+internal class ByteArraySource(
+    private val bytes: ByteArray,
+) : Source<ByteArray> {
     override fun len(): Int = bytes.size
 
-    override fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C? {
-        return if (offset + (chunk.size - 1) < bytes.size) {
+    override fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C? =
+        if (offset + (chunk.size - 1) < bytes.size) {
             chunk.fromBytes(bytes, offset)
         } else {
             null
         }
-    }
 
     override fun slice(start: Int, end: Int): ByteArray? {
         if (start < 0 || end < start || end > bytes.size) return null
@@ -147,27 +149,35 @@ internal class ByteArraySource(private val bytes: ByteArray) : Source<ByteArray>
 interface Chunk
 
 /** Per-chunk-type metadata: size and constructor. */
-internal abstract class ChunkKind<C : Chunk>(val size: Int) {
+internal abstract class ChunkKind<C : Chunk>(
+    val size: Int,
+) {
     abstract fun fromBytes(bytes: ByteArray, offset: Int): C
 }
 
 /** Single-byte chunk. */
-internal data class ChunkByte(val value: Byte) : Chunk {
+internal data class ChunkByte(
+    val value: Byte,
+) : Chunk {
     internal companion object Kind : ChunkKind<ChunkByte>(size = 1) {
         override fun fromBytes(bytes: ByteArray, offset: Int): ChunkByte = ChunkByte(bytes[offset])
     }
 }
 
 /** N-byte chunk. */
-internal class ChunkBytes(val bytes: ByteArray) : Chunk {
+internal class ChunkBytes(
+    val bytes: ByteArray,
+) : Chunk {
     override fun equals(other: Any?): Boolean = other is ChunkBytes && bytes.contentEquals(other.bytes)
+
     override fun hashCode(): Int = bytes.contentHashCode()
 
     internal companion object {
         /** Build a [ChunkKind] for chunks of exactly [n] bytes. */
-        fun kind(n: Int): ChunkKind<ChunkBytes> = object : ChunkKind<ChunkBytes>(size = n) {
-            override fun fromBytes(bytes: ByteArray, offset: Int): ChunkBytes =
-                ChunkBytes(bytes.copyOfRange(offset, offset + n))
-        }
+        fun kind(n: Int): ChunkKind<ChunkBytes> =
+            object : ChunkKind<ChunkBytes>(size = n) {
+                override fun fromBytes(bytes: ByteArray, offset: Int): ChunkBytes =
+                    ChunkBytes(bytes.copyOfRange(offset, offset + n))
+            }
     }
 }
