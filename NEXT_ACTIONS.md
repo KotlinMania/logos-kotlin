@@ -5,12 +5,12 @@ Based on AST analysis, here are the concrete next steps.
 ## Summary
 
 - **Files Present:** 4/4 (100.0%)
-- **Function parity:** 23/33 matched (target 57) — 69.7%
-- **Class/type parity:** 14/19 matched (target 27) — 73.7%
-- **Combined symbol parity:** 37/52 matched (target 84) — 71.2%
-- **Average inline-code cosine:** 0.26 (function body across 3 matched files)
+- **Function parity:** 23/33 matched (target 94) — 69.7%
+- **Class/type parity:** 14/19 matched (target 37) — 73.7%
+- **Combined symbol parity:** 37/52 matched (target 131) — 71.2%
+- **Average inline-code cosine:** 0.16 (function body across 3 matched files)
 - **Average documentation cosine:** 0.61 (doc text across 3 matched files)
-- **Cheat-zeroed Files:** 2
+- **Cheat-zeroed Files:** 3
 - **Critical Issues:** 4 files with <0.60 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
@@ -29,17 +29,19 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 1. source
 
-- **Target:** `source.Source [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.29
+- **Target:** `source.Source [ZERO] [PROVENANCE-FALLBACK]`
+- **Similarity:** 0.00
 - **Dependents:** 1
-- **Priority Score:** 1031107.1
-- **Functions:** 6/8 matched (target 19)
+- **Priority Score:** 1031110.0
+- **Functions:** 6/8 matched (target 45)
 - **Missing functions:** `from_ptr`, `from_slice`
-- **Types:** 2/3 matched (target 7)
+- **Types:** 2/3 matched (target 13)
 - **Missing types:** `Slice`
 - **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/source.rs` vs expected `source.rs`
+- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/source.rs` vs expected `source.rs`
 - **Proposed provenance header:** `// port-lint: source source.rs` (current: `// port-lint: source src/source.rs`)
-- **Lint issues:** 1
+- **Proposed provenance header:** `// port-lint: source source.rs` (current: `// port-lint: source src/source.rs`)
+- **Lint issues:** 2
 
 ### 2. lexer
 
@@ -61,13 +63,15 @@ Every matched file is listed below with function and type symbol parity.
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 20810.0
-- **Functions:** 2/3 matched (target 2)
+- **Functions:** 2/3 matched (target 13)
 - **Missing functions:** `lexer_with_extras`
-- **Types:** 4/5 matched (target 8)
+- **Types:** 4/5 matched (target 12)
 - **Missing types:** `ReadMe`
 - **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/lib.rs` vs expected `lib.rs`
+- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/lib.rs` vs expected `lib.rs`
 - **Proposed provenance header:** `// port-lint: source lib.rs` (current: `// port-lint: source src/lib.rs`)
-- **Lint issues:** 1
+- **Proposed provenance header:** `// port-lint: source lib.rs` (current: `// port-lint: source src/lib.rs`)
+- **Lint issues:** 2
 
 ### 4. internal
 
@@ -92,13 +96,3 @@ For each file to be considered "complete":
 - Documentation ported
 - port-lint header present
 
-## Next Commands
-
-```bash
-# Initialize task queue for systematic porting
-cd tools/ast_distance
-./ast_distance --init-tasks ../../src rust ../../src/commonMain/kotlin/io/github/kotlinmania/logos kotlin tasks.json ../../AGENTS.md
-
-# Get next high-priority task
-./ast_distance --assign tasks.json <agent-id>
-```
