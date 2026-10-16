@@ -1,4 +1,4 @@
-// port-lint: source src/lexer.rs
+// port-lint: source lexer.rs
 package io.github.kotlinmania.logos.lexer
 
 /*
@@ -20,6 +20,15 @@ data class Span(
 ) {
     val length: Int get() = endExclusive - start
 }
+
+/** Item type produced by iterating a lexer. */
+internal typealias Item<TToken> = Result<TToken>
+
+/** Target interface matching upstream associated type. */
+internal interface Target
+
+/** Token interface matching upstream associated type. */
+internal interface Token
 
 /**
  * [Lexer] is the main struct of the crate that allows you to read through a [Source]
@@ -76,6 +85,23 @@ internal class Lexer<TToken : Logos<E>, TSlice, E, Extras> internal constructor(
 
     /** Get the range for the current token in [Source]. */
     fun span(): Span = Span(tokenStart, tokenEnd)
+
+    /** Deprecated range method alias for span. */
+    @Deprecated("please use span instead", ReplaceWith("span()"))
+    fun range(): Span = span()
+
+    /** Debug format method. */
+    fun fmt(): String = "Lexer(source=$sourceRef, extras=$extras)"
+
+    /** Clone this lexer. */
+    fun clone(): Lexer<TToken, TSlice, E, Extras> =
+        Lexer(
+            sourceRef = sourceRef,
+            definition = definition,
+            tokenStart = tokenStart,
+            tokenEnd = tokenEnd,
+            extras = extras,
+        )
 
     /** Get a string slice of the current token. */
     fun slice(): TSlice = sourceRef.sliceUnchecked(tokenStart, tokenEnd)
@@ -179,10 +205,20 @@ internal class SpannedIter<TToken : Logos<E>, TSlice, E, Extras> internal constr
     override fun hasNext(): Boolean = lexer.hasNext()
 
     override fun next(): Pair<Result<TToken>, Span> {
+        if (!hasNext()) throw NoSuchElementException("No more tokens")
         val token = lexer.next()
         return Pair(token, lexer.span())
     }
 
     /** Access the underlying lexer. */
     fun lexer(): Lexer<TToken, TSlice, E, Extras> = lexer
+
+    /** Dereference to underlying lexer. */
+    fun deref(): Lexer<TToken, TSlice, E, Extras> = lexer
+
+    /** Mutable dereference to underlying lexer. */
+    fun derefMut(): Lexer<TToken, TSlice, E, Extras> = lexer
+
+    /** Clone this spanned iterator. */
+    fun clone(): SpannedIter<TToken, TSlice, E, Extras> = SpannedIter(lexer.clone())
 }

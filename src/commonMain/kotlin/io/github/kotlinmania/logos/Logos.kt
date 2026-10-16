@@ -1,4 +1,4 @@
-// port-lint: source src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.logos
 
 /*
@@ -17,24 +17,20 @@ package io.github.kotlinmania.logos
 //
 // To achieve those, **Logos**:
 //
-// + Combines all token definitions into a single deterministic state machine
-//   (https://en.wikipedia.org/wiki/Deterministic_finite_automaton).
-// + Optimizes branches into lookup tables (https://en.wikipedia.org/wiki/Lookup_table)
-//   or jump tables (https://en.wikipedia.org/wiki/Branch_table).
-// + Prevents backtracking (https://en.wikipedia.org/wiki/ReDoS) inside token definitions.
-// + Unwinds loops (https://en.wikipedia.org/wiki/Loop_unrolling), and batches reads
-//   to minimize bounds checking.
-// + Does all of that heavy lifting at lexer-build time.
+// + Combines all token definitions into a single deterministic finite automaton.
+// + Optimizes branches into lookup tables or jump tables.
+// + Prevents backtracking inside token definitions.
+// + Unwinds loops, and batches reads to minimize bounds checking.
+// + Does all of that heavy lifting at compile time.
 //
-// See the Logos handbook (https://maciejhirsz.github.io/logos/) for additional
-// documentation and usage examples.
+// See the Logos handbook for additional documentation and usage examples.
 
 import io.github.kotlinmania.logos.lexer.Lexer
 import io.github.kotlinmania.logos.source.Source
 
 /**
- * Trait implemented for an enum representing all tokens. You should never have to implement it
- * manually; use the `Logos` derive on your enum.
+ * Interface implemented for an enum representing all tokens. You should never have to implement it
+ * manually; use the Logos generator on your enum.
  *
  * The type parameter `E` is the error type associated with this token (defaults to [Unit] when
  * not customised).
@@ -43,8 +39,14 @@ internal interface Logos<E> {
     /** The source slice type the lexer reads from. */
     val sourceSliceType: SourceSliceType
 
-    /** Construct the default error value (the analog of a no-arg default constructor). */
+    /** Construct the default error value. */
     fun defaultError(): E
+
+    /** Create a new lexer for this token definition. */
+    fun <TSlice> lexer(source: Source<TSlice>): Lexer<*, TSlice, E, Unit>? = null
+
+    /** Create a new lexer with extras for this token definition. */
+    fun <TSlice, Extras> lexerWithExtras(source: Source<TSlice>, extras: Extras): Lexer<*, TSlice, E, Extras>? = null
 }
 
 /** Marker for the kind of source the lexer expects (string vs. byte-array). */
@@ -75,19 +77,16 @@ internal interface LexerDefinition<TToken : Logos<E>, TSlice, E> {
 }
 
 /**
- * Type that can be returned from a callback, informing the [Lexer], to skip
+ * Type that can be returned from a callback, informing the [Lexer] to skip
  * current token match. See also [skip].
  *
- * # Example
- *
+ * Example:
  * ```kotlin
  * sealed class Token : Logos<Unit> {
  *     // We will treat "abc" as if it was whitespace.
  *     // This is identical to using `skip`.
- *     // #[regex(" |abc", { Skip() }, priority = 3)]
  *     object Ignored : Token()
  *
- *     // #[regex("[a-zA-Z]+")]
  *     data class Text(val value: String) : Token()
  * }
  *
@@ -102,6 +101,8 @@ internal interface LexerDefinition<TToken : Logos<E>, TSlice, E> {
  * ```
  */
 class Skip {
+    override fun toString(): String = "Skip"
+
     companion object {
         val SKIP: Skip = Skip()
     }
@@ -111,19 +112,11 @@ class Skip {
  * Type that can be returned from a callback, either producing a field
  * for a token, or skipping it.
  *
- * # Example
- *
+ * Example:
  * ```kotlin
  * sealed class Token : Logos<Unit> {
- *     // #[regex(r"[ \n\f\t]+", ::skip)]
  *     object Ignored : Token()
  *
- *     // #[regex("[0-9]+", { lex ->
- *     //     val n: Long = lex.slice().toLong()
- *     //
- *     //     // Only emit a token if `n` is an even number
- *     //     if (n % 2 == 0L) Filter.Emit(n) else Filter.Skip()
- *     // })]
  *     data class EvenNumber(val value: Long) : Token()
  * }
  *
@@ -155,8 +148,7 @@ internal sealed class Filter<T> {
  * Type that can be returned from a callback, either producing a field
  * for a token, skipping it, or emitting an error.
  *
- * # Example
- *
+ * Example:
  * ```kotlin
  * sealed class LexingError {
  *     object NumberParseError : LexingError()
@@ -168,21 +160,8 @@ internal sealed class Filter<T> {
  *     }
  * }
  *
- * // logos(error = LexingError)
  * sealed class Token : Logos<LexingError> {
- *     // #[regex(r"[ \n\f\t]+", ::skip)]
  *     object Ignored : Token()
- *
- *     // #[regex("[0-9]+", { lex ->
- *     //     val n: Long = lex.slice().toLong()
- *     //
- *     //     // Only emit a token if `n` is an even number.
- *     //     if (n % 2 == 0L) {
- *     //         // Emit an error if `n` is 10.
- *     //         if (n == 10L) FilterResult.Error(LexingError.NumberIsTen)
- *     //         else FilterResult.Emit(n)
- *     //     } else FilterResult.Skip()
- *     // })]
  *     data class NiceEvenNumber(val value: Long) : Token()
  * }
  *
@@ -210,7 +189,7 @@ internal sealed class FilterResult<T, E> {
     /** Skip current match, analog to [Skip]. */
     internal class Skip<T, E> : FilterResult<T, E>()
 
-    /** Emit a `<Token as Logos>::ERROR` token. */
+    /** Emit an error token. */
     internal class Error<T, E>(
         val error: E,
     ) : FilterResult<T, E>()
@@ -219,15 +198,12 @@ internal sealed class FilterResult<T, E> {
 /**
  * Predefined callback that will inform the [Lexer] to skip a definition.
  *
- * # Example
- *
+ * Example:
  * ```kotlin
  * sealed class Token : Logos<Unit> {
  *     // We will treat "abc" as if it was whitespace
- *     // #[regex(" |abc", ::skip, priority = 3)]
  *     object Ignored : Token()
  *
- *     // #[regex("[a-zA-Z]+")]
  *     data class Text(val value: String) : Token()
  * }
  *
@@ -242,3 +218,6 @@ internal sealed class FilterResult<T, E> {
  * ```
  */
 fun skip(): Skip = Skip.SKIP
+
+/** Marker matching upstream documentation structure. */
+internal class ReadMe

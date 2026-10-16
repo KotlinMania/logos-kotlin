@@ -1,4 +1,4 @@
-// port-lint: source src/source.rs
+// port-lint: source source.rs
 package io.github.kotlinmania.logos.source
 
 /*
@@ -13,20 +13,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-// Tests porting the documented examples on the upstream `Source` trait. The upstream tests
-// live on Rust trait docstrings (`pub trait Source` in `src/source.rs`); each `assert_eq!`
-// in those docstrings is the public contract for the trait. The Kotlin port keeps the same
-// contract on the StringSource / ByteArraySource implementations.
+// Tests porting the documented examples on the upstream Source trait.
+// The Kotlin port keeps the same contract on the StringSource and ByteArraySource implementations.
 
 class StringSourceReadTest {
-    // Read a chunk of bytes into an array. Returns `None` when reading
-    // out of bounds would occur.
-    //
-    // assert_eq!(foo.read(0), Some(b"foo"));
-    // assert_eq!(foo.read(0), Some(b"fo"));
-    // assert_eq!(foo.read(2), Some(b'o'));
-    // assert_eq!(foo.read::<&[u8; 4]>(0), None);
-    // assert_eq!(foo.read::<&[u8; 2]>(2), None);
+    // Read a chunk of bytes into an array. Returns null when reading out of bounds occurs.
     @Test
     fun readThreeByteChunkAtStart() {
         val foo = StringSource("foo")
@@ -64,19 +55,13 @@ class StringSourceReadTest {
 class StringSourceSliceTest {
     private val foo = StringSource("It was the year when they finally immanentized the Eschaton.")
 
-    // Get a slice of the source at given range. This is analogous to
-    // `slice::get(range)`.
-    //
-    // assert_eq!(<str as Source>::slice(&foo, 51..59), Some("Eschaton"));
+    // Get a slice of the source at given range.
     @Test
     fun sliceReturnsSubstringWhenInBounds() {
         assertEquals("Eschaton", foo.slice(51, 59))
     }
 
-    // Get a slice of the source at given range. This is analogous to
-    // `slice::get_unchecked(range)`.
-    //
-    // assert_eq!(<str as Source>::slice_unchecked(&foo, 51..59), "Eschaton");
+    // Get a slice of the source at given range without bounds checking.
     @Test
     fun sliceUncheckedReturnsSubstring() {
         assertEquals("Eschaton", foo.sliceUnchecked(51, 59))
@@ -94,9 +79,8 @@ class StringSourceSliceTest {
 }
 
 class StringSourceBoundaryTest {
-    // For string sources, `is_boundary(index)` is true when `index` does not land in the
-    // middle of a UTF-8 code point, and `find_boundary` returns the next valid boundary
-    // at or after `index`.
+    // For string sources, isBoundary is true when index does not land in the
+    // middle of a UTF-8 code point, and findBoundary returns the next valid boundary.
     @Test
     fun asciiSourceHasBoundaryAtEveryByte() {
         val s = StringSource("abc")
@@ -152,7 +136,7 @@ class StringSourceLenTest {
 }
 
 class ByteArraySourceTest {
-    // Binary sources treat every index up to `len()` as a boundary.
+    // Binary sources treat every index up to len as a boundary.
     @Test
     fun lenMatchesByteArraySize() {
         assertEquals(0, ByteArraySource(byteArrayOf()).len())
@@ -213,7 +197,7 @@ class ByteArraySourceTest {
 
 class ChunkBytesEqualityTest {
     // ChunkBytes overrides equals/hashCode to compare by content rather than identity, mirroring
-    // the upstream `[u8; N]` chunk equality contract that the lexer relies on.
+    // the upstream chunk equality contract that the lexer relies on.
     @Test
     fun equalsByContent() {
         assertEquals(ChunkBytes(byteArrayOf(1, 2, 3)), ChunkBytes(byteArrayOf(1, 2, 3)))

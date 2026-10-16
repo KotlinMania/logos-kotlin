@@ -1,4 +1,4 @@
-// port-lint: source src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.logos
 
 /*
@@ -11,17 +11,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-// Tests for the Logos.kt runtime types. Upstream's tests on these types live behind the
-// `#[derive(Logos)]` macro; the Kotlin port exposes the underlying sealed types directly,
-// so the contract for `Skip`, `Filter<T>`, `FilterResult<T, E>`, and the predefined
-// `skip()` callback is exercised in commonTest at the type-shape level.
+// Tests for the Logos.kt runtime types. The Kotlin port exposes the underlying sealed types directly,
+// so the contract for Skip, Filter, FilterResult, and the predefined
+// skip callback is exercised in commonTest at the type-shape level.
 
 class SkipTest {
-    // Type that can be returned from a callback, informing the Lexer to skip the current token
-    // match. Upstream Rust models this as `pub struct Skip;` (a zero-sized unit type).
+    // Type that can be returned from a callback, informing the Lexer to skip the current token match.
     @Test
     fun skipSingletonIsStable() {
-        // The companion `SKIP` is the canonical singleton handed back by the `skip()` predefined
+        // The companion SKIP is the canonical singleton handed back by the skip() predefined
         // callback; it must not be replaced by a fresh instance on every call.
         assertSame(Skip.SKIP, Skip.SKIP)
     }
@@ -56,8 +54,6 @@ class FilterTest {
 }
 
 class FilterResultTest {
-    // Upstream:
-    //   pub enum FilterResult<T, E> { Emit(T), Skip, Error(E) }
     @Test
     fun emitCarriesValue() {
         val r: FilterResult<Int, String> = FilterResult.Emit(20)
@@ -80,7 +76,7 @@ class FilterResultTest {
 
     @Test
     fun whenExpressionExhaustsAllThreeBranches() {
-        // Exercise that the sealed hierarchy is exhaustive in `when`: this would fail to compile
+        // Exercise that the sealed hierarchy is exhaustive in when: this would fail to compile
         // (or warn-as-error under allWarningsAsErrors) if a branch were missing.
         val cases: List<FilterResult<Int, String>> =
             listOf(
@@ -102,9 +98,8 @@ class FilterResultTest {
 }
 
 class SourceSliceTypeTest {
-    // Upstream `Logos::Source` is associated-type-driven; the Kotlin port models the same
-    // distinction with the `SourceSliceType` enum so tokens declare whether their slice type
-    // is `String` (UTF-8 source) or `ByteArray` (binary source).
+    // The Kotlin port models the source slice distinction with the SourceSliceType enum
+    // so tokens declare whether their slice type is String (UTF-8 source) or ByteArray (binary source).
     @Test
     fun strAndBytesAreDistinctEntries() {
         check(SourceSliceType.STR != SourceSliceType.BYTES)
