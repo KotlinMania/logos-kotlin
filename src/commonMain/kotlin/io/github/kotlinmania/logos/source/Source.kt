@@ -1,4 +1,4 @@
-// port-lint: source src/source.rs
+// port-lint: source source.rs
 package io.github.kotlinmania.logos.source
 
 /*
@@ -9,15 +9,18 @@ package io.github.kotlinmania.logos.source
 // This module contains a bunch of traits necessary for processing byte strings.
 //
 // Most notable are:
-// * [Source] - implemented by default for [String] and [ByteArray] and wrapper types, used by the `Lexer`.
-// * Slice - slices of [Source], returned by `Lexer.slice`.
+// * [Source] - implemented by default for [String] and [ByteArray] and wrapper types, used by the Lexer.
+// * [Slice] - slices of [Source], returned by Lexer.slice.
+
+/** Slices of Source, returned by Lexer.slice. */
+interface Slice
 
 /**
- * Trait for types the `Lexer` can read from.
+ * Trait for types the Lexer can read from.
  *
  * Most notably this is implemented for [String] and [ByteArray]. It is unlikely you will
  * ever want to use this Trait yourself, unless implementing a new [Source]
- * the `Lexer` can use.
+ * the Lexer can use.
  */
 internal interface Source<TSlice> {
     /** Length of the source. */
@@ -31,30 +34,30 @@ internal interface Source<TSlice> {
      */
     fun <C : Chunk> read(offset: Int, chunk: ChunkKind<C>): C?
 
-    /** Get a slice of the source at given range, or `null` if the range is out of bounds. */
+    /** Get a slice of the source at given range, or null if the range is out of bounds. */
     fun slice(start: Int, end: Int): TSlice?
 
     /**
      * Get a slice of the source at given range, without bounds checking.
      *
-     * The caller is responsible for ensuring `start` and `end` are within bounds and on a valid
+     * The caller is responsible for ensuring start and end are within bounds and on a valid
      * boundary.
      */
     fun sliceUnchecked(start: Int, end: Int): TSlice
 
     /**
      * For string sources attempts to find the closest character boundary at which the source
-     * can be sliced, starting from `index`.
+     * can be sliced, starting from index.
      *
-     * For binary sources this should just return `index` back.
+     * For binary sources this should just return index back.
      */
     fun findBoundary(index: Int): Int = index
 
     /**
-     * Check if `index` is valid for this [Source], that is:
+     * Check if index is valid for this [Source], that is:
      *
-     * + It's not larger than the byte length of the [Source].
-     * + (string only) It doesn't land in the middle of a UTF-8 code point.
+     * + It is not larger than the byte length of the [Source].
+     * + (string only) It does not land in the middle of a UTF-8 code point.
      */
     fun isBoundary(index: Int): Boolean
 }
@@ -101,7 +104,7 @@ internal class StringSource(
     override fun isBoundary(index: Int): Boolean {
         if (index < 0 || index > bytes.size) return false
         if (index == 0 || index == bytes.size) return true
-        // A byte is a UTF-8 char-boundary if it's not a continuation byte (top two bits != 10).
+        // A byte is a UTF-8 char boundary if it is not a continuation byte (top two bits != 10).
         val b = bytes[index].toInt() and 0xC0
         return b != 0x80
     }
@@ -153,6 +156,10 @@ internal abstract class ChunkKind<C : Chunk>(
     val size: Int,
 ) {
     abstract fun fromBytes(bytes: ByteArray, offset: Int): C
+
+    abstract fun fromSlice(bytes: ByteArray): C?
+
+    fun fromPtr(bytes: ByteArray, offset: Int): C = fromBytes(bytes, offset)
 }
 
 /** Single-byte chunk. */
@@ -161,6 +168,9 @@ internal data class ChunkByte(
 ) : Chunk {
     internal companion object Kind : ChunkKind<ChunkByte>(size = 1) {
         override fun fromBytes(bytes: ByteArray, offset: Int): ChunkByte = ChunkByte(bytes[offset])
+
+        override fun fromSlice(bytes: ByteArray): ChunkByte? =
+            if (bytes.isNotEmpty()) ChunkByte(bytes[0]) else null
     }
 }
 
@@ -178,6 +188,9 @@ internal class ChunkBytes(
             object : ChunkKind<ChunkBytes>(size = n) {
                 override fun fromBytes(bytes: ByteArray, offset: Int): ChunkBytes =
                     ChunkBytes(bytes.copyOfRange(offset, offset + n))
+
+                override fun fromSlice(bytes: ByteArray): ChunkBytes? =
+                    if (bytes.size >= n) ChunkBytes(bytes.copyOfRange(0, n)) else null
             }
     }
 }

@@ -5,13 +5,13 @@ Based on AST analysis, here are the concrete next steps.
 ## Summary
 
 - **Files Present:** 4/4 (100.0%)
-- **Function parity:** 23/33 matched (target 94) — 69.7%
-- **Class/type parity:** 14/19 matched (target 37) — 73.7%
-- **Combined symbol parity:** 37/52 matched (target 131) — 71.2%
-- **Average inline-code cosine:** 0.16 (function body across 3 matched files)
-- **Average documentation cosine:** 0.61 (doc text across 3 matched files)
-- **Cheat-zeroed Files:** 3
-- **Critical Issues:** 4 files with <0.60 function similarity
+- **Function parity:** 33/33 matched (target 108) — 100.0%
+- **Class/type parity:** 19/19 matched (target 42) — 100.0%
+- **Combined symbol parity:** 52/52 matched (target 150) — 100.0%
+- **Average inline-code cosine:** 0.47 (function body across 4 matched files)
+- **Average documentation cosine:** 0.62 (doc text across 4 matched files)
+- **Cheat-zeroed Files:** 0
+- **Critical Issues:** 2 files with <0.60 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -29,63 +29,47 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 1. source
 
-- **Target:** `source.Source [ZERO] [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.00
+- **Target:** `source.Source`
+- **Similarity:** 0.33
 - **Dependents:** 1
-- **Priority Score:** 1031110.0
-- **Functions:** 6/8 matched (target 45)
-- **Missing functions:** `from_ptr`, `from_slice`
-- **Types:** 2/3 matched (target 13)
-- **Missing types:** `Slice`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/source.rs` vs expected `source.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/source.rs` vs expected `source.rs`
-- **Proposed provenance header:** `// port-lint: source source.rs` (current: `// port-lint: source src/source.rs`)
-- **Proposed provenance header:** `// port-lint: source source.rs` (current: `// port-lint: source src/source.rs`)
-- **Lint issues:** 2
+- **Priority Score:** 1001106.8
+- **Functions:** 8/8 matched (target 48)
+- **Missing functions:** _none_
+- **Types:** 3/3 matched (target 14)
+- **Missing types:** _none_
 
 ### 2. lexer
 
-- **Target:** `lexer.Lexer [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.49
+- **Target:** `lexer.Lexer`
+- **Similarity:** 0.69
 - **Dependents:** 0
-- **Priority Score:** 82605.1
-- **Functions:** 15/20 matched
-- **Missing functions:** `fmt`, `range`, `clone`, `deref`, `deref_mut`
-- **Types:** 3/6 matched (target 3)
-- **Missing types:** `Item`, `Target`, `Token`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/lexer.rs` vs expected `lexer.rs`
-- **Proposed provenance header:** `// port-lint: source lexer.rs` (current: `// port-lint: source src/lexer.rs`)
-- **Lint issues:** 1
+- **Priority Score:** 2603.1
+- **Functions:** 20/20 matched (target 26)
+- **Missing functions:** _none_
+- **Types:** 6/6 matched
+- **Missing types:** _none_
 
 ### 3. lib
 
-- **Target:** `logos.Logos [STUB] [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.00
+- **Target:** `logos.Logos`
+- **Similarity:** 0.73
 - **Dependents:** 0
-- **Priority Score:** 20810.0
-- **Functions:** 2/3 matched (target 13)
-- **Missing functions:** `lexer_with_extras`
-- **Types:** 4/5 matched (target 12)
-- **Missing types:** `ReadMe`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/lib.rs` vs expected `lib.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/lib.rs` vs expected `lib.rs`
-- **Proposed provenance header:** `// port-lint: source lib.rs` (current: `// port-lint: source src/lib.rs`)
-- **Proposed provenance header:** `// port-lint: source lib.rs` (current: `// port-lint: source src/lib.rs`)
-- **Lint issues:** 2
+- **Priority Score:** 802.7
+- **Functions:** 3/3 matched (target 15)
+- **Missing functions:** _none_
+- **Types:** 5/5 matched (target 13)
+- **Missing types:** _none_
 
 ### 4. internal
 
-- **Target:** `logos.Internal [ZERO] [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.00
+- **Target:** `logos.Internal`
+- **Similarity:** 0.14
 - **Dependents:** 0
-- **Priority Score:** 20710.0
-- **Functions:** 0/2 matched (target 16)
-- **Missing functions:** `construct`, `from`
+- **Priority Score:** 708.6
+- **Functions:** 2/2 matched (target 19)
+- **Missing functions:** _none_
 - **Types:** 5/5 matched (target 9)
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/internal.rs` vs expected `internal.rs`
-- **Proposed provenance header:** `// port-lint: source internal.rs` (current: `// port-lint: source src/internal.rs`)
-- **Lint issues:** 1
 
 ## Success Criteria
 

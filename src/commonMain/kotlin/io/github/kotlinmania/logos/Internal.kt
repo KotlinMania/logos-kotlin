@@ -1,4 +1,4 @@
-// port-lint: source src/internal.rs
+// port-lint: source internal.rs
 package io.github.kotlinmania.logos
 
 /*
@@ -12,13 +12,11 @@ import io.github.kotlinmania.logos.source.ChunkKind
 /**
  * Trait used by the functions contained in the lexicon.
  *
- * # WARNING!
- *
- * **This trait, and its methods, are not meant to be used outside of the
- * code produced by the `Logos` derive.**
+ * Warning: This trait, and its methods, are not meant to be used outside of the
+ * code produced by the Logos generator.
  */
 internal interface LexerInternal<TToken : Logos<*>> {
-    /** Get the current offset of token_start. */
+    /** Get the current offset of tokenStart. */
     fun offset(): Int
 
     /** Read a chunk. */
@@ -52,14 +50,19 @@ internal sealed class CallbackResult<L : Logos<E>, E> {
     internal class DefaultError<L : Logos<E>, E> : CallbackResult<L, E>()
 
     internal class Skip<L : Logos<E>, E> : CallbackResult<L, E>()
+
+    companion object {
+        fun <L : Logos<E>, E> from(value: SkipResult<L, E>): CallbackResult<L, E> = value.intoCallbackResult()
+    }
 }
 
 /**
- * Trait converting a callback's return value into a [CallbackResult]. Each entry point handles
- * a single return-type shape (raw value, [Result], [Filter], [FilterResult], [Skip], …); the
- * generated derive code calls the matching one.
+ * Trait converting a callback return value into a [CallbackResult].
  */
 internal object CallbackRetVal {
+    /** General construct function matching upstream signature. */
+    fun <T, L : Logos<E>, E> construct(value: T, con: (T) -> L): CallbackResult<L, E> = CallbackResult.Emit(con(value))
+
     /** Field-variant: callback returned a value `T`; emit `con(value)`. */
     fun <T, L : Logos<E>, E> emitValue(value: T, con: (T) -> L): CallbackResult<L, E> = CallbackResult.Emit(con(value))
 
@@ -91,16 +94,7 @@ internal object CallbackRetVal {
     /** Unit-variant: callback returned [Boolean]; emit on true, default error on false. */
     fun <L : Logos<E>, E> emitBoolean(value: Boolean, con: () -> L): CallbackResult<L, E> = if (value) CallbackResult.Emit(con()) else CallbackResult.DefaultError()
 
-    /**
-     * Unit-variant: callback returned [Skip]; always skip.
-     *
-     * Marked `internal` because the no-argument generic shape can't carry
-     * L/E through the Swift Export bridge — the bridge call site fails
-     * `compileSwiftExportMainKotlinMacosArm64` with
-     * `Cannot infer type for type parameter 'L' / 'E'`. Common Kotlin
-     * callers (the generated derive code) spell the types at the call site
-     * directly.
-     */
+    /** Unit-variant: callback returned [Skip]; always skip. */
     internal fun <L : Logos<E>, E> emitSkip(): CallbackResult<L, E> = CallbackResult.Skip()
 
     /** Unit-variant: callback returned [Result] of [Skip]; skip on success, error on failure. */
@@ -149,20 +143,16 @@ internal fun <L : Logos<E>, E> SkipResult<L, E>.intoCallbackResult(): CallbackRe
 
 /** Trait for skip-callback return types. */
 internal object SkipRetVal {
-    /**
-     * Skip on `Unit`/`Skip`.
-     *
-     * Marked `internal` because the no-argument generic shape can't carry
-     * L/E through the Swift Export bridge — fails with
-     * `Cannot infer type for type parameter 'L' / 'E'`. Common Kotlin
-     * callers spell the types at the call site directly.
-     */
+    /** General construct function matching upstream signature. */
+    fun <L : Logos<E>, E> construct(): SkipResult<L, E> = SkipResult.Skip()
+
+    /** Skip on Unit. */
     internal fun <L : Logos<E>, E> ofUnit(): SkipResult<L, E> = SkipResult.Skip()
 
-    /** Same Swift-Export-inference rationale as [ofUnit]. */
+    /** Skip on Skip. */
     internal fun <L : Logos<E>, E> ofSkip(): SkipResult<L, E> = SkipResult.Skip()
 
-    /** Skip on `Ok`, error on `Err`. */
+    /** Skip on success, error on failure. */
     fun <L : Logos<E>, E> ofResultUnit(result: Result<Unit>, errorAdapter: (Throwable) -> E): SkipResult<L, E> =
         result.fold(
             onSuccess = { SkipResult.Skip() },
