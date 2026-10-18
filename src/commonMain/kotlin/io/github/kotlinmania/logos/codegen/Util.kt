@@ -8,8 +8,7 @@ import io.github.kotlinmania.procmacro2.Span
 import io.github.kotlinmania.procmacro2.TokenStream
 import io.github.kotlinmania.procmacro2.TokenTree
 import io.github.kotlinmania.quote.ToTokens
-import io.github.kotlinmania.syn.Ident
-
+import io.github.kotlinmania.procmacro2.Ident
 class MaybeVoid(
     private var stream: TokenStream?,
 ) : ToTokens {
